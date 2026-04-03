@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -77,9 +79,10 @@ fun MainScreen(
         if (uiState.isLoading) {
             CircularProgressIndicator()
         }
-        Text("Selected tag: ${uiState.selectedTag}")
-        Text("Tags loaded: ${uiState.allTags.size}")
-        Text("Filtered locations: ${uiState.filteredLocations.size}")
+        // debug text:
+//        Text("Selected tag: ${uiState.selectedTag}")
+//        Text("Tags loaded: ${uiState.allTags.size}")
+//        Text("Filtered locations: ${uiState.filteredLocations.size}")
 
         CampusMap(
             locations = uiState.filteredLocations,
@@ -103,20 +106,17 @@ fun TagDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        OutlinedTextField(
-            value = selectedTag,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Filter by tag") },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
+    Box {
+        OutlinedButton(
+            onClick = { expanded = true },
             modifier = Modifier.fillMaxWidth()
-        )
+        ) {
+            Text(
+                text = selectedTag,
+                modifier = Modifier.weight(1f)
+            )
+            Text("▼")
+        }
 
         DropdownMenu(
             expanded = expanded,
@@ -160,12 +160,22 @@ fun CampusMap(
         cameraPositionState = cameraPositionState
     ) {
         locations.forEach { location ->
+            val cleanDescription = location.description
+                .replace("&apos;", "'")
+                .replace("&quot;", "\"")
+
+            val shortDescription =
+                if (cleanDescription.length > 80)
+                    cleanDescription.take(80) + "..."
+                else
+                    cleanDescription
+
             Marker(
                 state = rememberUpdatedMarkerState(
                     position = LatLng(location.latitude, location.longitude)
                 ),
                 title = location.name,
-                snippet = location.description
+                snippet = shortDescription
             )
         }
     }
